@@ -1,8 +1,7 @@
 package govaluate
 
 /*
-	Represents the valid symbols for operators.
-
+Represents the valid symbols for operators.
 */
 type OperatorSymbol int
 
@@ -57,7 +56,9 @@ const (
 	prefixPrecedence
 	exponentialPrecedence
 	additivePrecedence
-	bitwisePrecedence
+	bitwiseAndPrecedence
+	bitwiseXorPrecedence
+	bitwiseOrPrecedence
 	bitwiseShiftPrecedence
 	multiplicativePrecedence
 	comparatorPrecedence
@@ -97,11 +98,11 @@ func findOperatorPrecedenceForSymbol(symbol OperatorSymbol) operatorPrecedence {
 	case OR:
 		return logicalOrPrecedence
 	case BITWISE_AND:
-		fallthrough
-	case BITWISE_OR:
-		fallthrough
+		return bitwiseAndPrecedence
 	case BITWISE_XOR:
-		return bitwisePrecedence
+		return bitwiseXorPrecedence
+	case BITWISE_OR:
+		return bitwiseOrPrecedence
 	case BITWISE_LSHIFT:
 		fallthrough
 	case BITWISE_RSHIFT:
@@ -142,9 +143,9 @@ func findOperatorPrecedenceForSymbol(symbol OperatorSymbol) operatorPrecedence {
 }
 
 /*
-	Map of all valid comparators, and their string equivalents.
-	Used during parsing of expressions to determine if a symbol is, in fact, a comparator.
-	Also used during evaluation to determine exactly which comparator is being used.
+Map of all valid comparators, and their string equivalents.
+Used during parsing of expressions to determine if a symbol is, in fact, a comparator.
+Also used during evaluation to determine exactly which comparator is being used.
 */
 var comparatorSymbols = map[string]OperatorSymbol{
 	"==": EQ,
@@ -163,9 +164,15 @@ var logicalSymbols = map[string]OperatorSymbol{
 	"||": OR,
 }
 
-var bitwiseSymbols = map[string]OperatorSymbol{
-	"^": BITWISE_XOR,
+var bitwiseAndSymbols = map[string]OperatorSymbol{
 	"&": BITWISE_AND,
+}
+
+var bitwiseXorSymbols = map[string]OperatorSymbol{
+	"^": BITWISE_XOR,
+}
+
+var bitwiseOrSymbols = map[string]OperatorSymbol{
 	"|": BITWISE_OR,
 }
 
@@ -221,13 +228,13 @@ var separatorSymbols = map[string]OperatorSymbol{
 }
 
 /*
-	Returns true if this operator is contained by the given array of candidate symbols.
-	False otherwise.
+Returns true if this operator is contained by the given array of candidate symbols.
+False otherwise.
 */
-func (this OperatorSymbol) IsModifierType(candidate []OperatorSymbol) bool {
+func (o OperatorSymbol) IsModifierType(candidate []OperatorSymbol) bool {
 
 	for _, symbolType := range candidate {
-		if this == symbolType {
+		if o == symbolType {
 			return true
 		}
 	}
@@ -236,14 +243,14 @@ func (this OperatorSymbol) IsModifierType(candidate []OperatorSymbol) bool {
 }
 
 /*
-	Generally used when formatting type check errors.
-	We could store the stringified symbol somewhere else and not require a duplicated codeblock to translate
-	OperatorSymbol to string, but that would require more memory, and another field somewhere.
-	Adding operators is rare enough that we just stringify it here instead.
+Generally used when formatting type check errors.
+We could store the stringified symbol somewhere else and not require a duplicated codeblock to translate
+OperatorSymbol to string, but that would require more memory, and another field somewhere.
+Adding operators is rare enough that we just stringify it here instead.
 */
-func (this OperatorSymbol) String() string {
+func (o OperatorSymbol) String() string {
 
-	switch this {
+	switch o {
 	case NOOP:
 		return "NOOP"
 	case VALUE:
